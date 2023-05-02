@@ -1,10 +1,10 @@
 import React from 'react'
-import Select from './components/Select/Select'
+import Component from './components/Component/Component'
 
 const App = () => {
   return (
     <div>
-      <Select />
+      <Component />
     </div>
   )
 }

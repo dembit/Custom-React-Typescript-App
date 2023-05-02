@@ -1040,6 +1040,20 @@ export type ApplicantLinkedCompany = {
   percentage_owned?: Maybe<Scalars['Float']>;
 };
 
+export type ApplicantModuleActivity = {
+  __typename?: 'ApplicantModuleActivity';
+  /** ID Аппликанта */
+  applicant_id: Scalars['ID'];
+  /** Тип Аппликанта */
+  applicant_type: ApplicantType;
+  /** ID */
+  id: Scalars['ID'];
+  /** Активность */
+  is_active: Scalars['Boolean'];
+  /** ID Модуля */
+  module_id: Scalars['ID'];
+};
+
 export type ApplicantProfile = {
   __typename?: 'ApplicantProfile';
   /** Адрес */
@@ -1346,8 +1360,6 @@ export type BankCorrespondent = {
   bank_code: Scalars['String'];
   /** Получить страну */
   country?: Maybe<Country>;
-  /** Получить валюты */
-  currencies?: Maybe<Array<Maybe<Currencies>>>;
   /** IDs currencies and regions */
   currencies_and_regions: Array<Maybe<CurrencyAndRegionResponse>>;
   /** ID */
@@ -1358,8 +1370,6 @@ export type BankCorrespondent = {
   name: Scalars['String'];
   /** NCS Number */
   ncs_number: Scalars['String'];
-  /** Получить регионы */
-  regions?: Maybe<Array<Maybe<Region>>>;
   /** swift */
   swift: Scalars['String'];
 };
@@ -3106,6 +3116,8 @@ export type Mutation = {
   deleteApplicantStateReason?: Maybe<ApplicantStateReason>;
   /** Удалить банк корреспондент */
   deleteBankCorrespondent?: Maybe<BankCorrespondent>;
+  /** Удалить банк корреспондент currency_and_region */
+  deleteBankCorrespondentCurrencyAndRegion?: Maybe<BankCorrespondent>;
   /** Удалить прайс лист */
   deleteCommissionPriceList?: Maybe<CommissionPriceList>;
   /** Удалить шаблон */
@@ -3218,6 +3230,8 @@ export type Mutation = {
   sendTransferOutgoingFee?: Maybe<TransferOutgoing>;
   /** Установить пароль */
   setApplicantIndividualPassword?: Maybe<ApplicantIndividual>;
+  /** Сделать Активным/Неактивным модуль для Аппликанта Индивидуала/Компании */
+  setApplicantModuleActivity?: Maybe<ApplicantModuleActivity>;
   /** Установить PIN пользователю */
   setApplicantSecurityPin?: Maybe<ApplicantIndividual>;
   /** Установить пароль */
@@ -3642,6 +3656,7 @@ export type MutationCreateApplicantTransferExchangeArgs = {
   amount: Scalars['Decimal'];
   file_id?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   from_account_id: Scalars['ID'];
+  price_list_fee_id: Scalars['ID'];
   to_account_id: Scalars['ID'];
 };
 
@@ -3959,6 +3974,7 @@ export type MutationCreateTransferExchangeArgs = {
   amount: Scalars['Decimal'];
   file_id?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   from_account_id: Scalars['ID'];
+  price_list_fee_id: Scalars['ID'];
   to_account_id: Scalars['ID'];
 };
 
@@ -4174,6 +4190,12 @@ export type MutationDeleteApplicantStateReasonArgs = {
 
 
 export type MutationDeleteBankCorrespondentArgs = {
+  id: Scalars['ID'];
+};
+
+
+export type MutationDeleteBankCorrespondentCurrencyAndRegionArgs = {
+  currencies_and_regions: Array<CurrenciesAndRegions>;
   id: Scalars['ID'];
 };
 
@@ -4487,6 +4509,14 @@ export type MutationSetApplicantIndividualPasswordArgs = {
   id: Scalars['ID'];
   password: Scalars['String'];
   password_confirmation: Scalars['String'];
+};
+
+
+export type MutationSetApplicantModuleActivityArgs = {
+  applicant_id: Scalars['ID'];
+  applicant_type: ApplicantType;
+  is_active: Scalars['Boolean'];
+  module_id: Scalars['ID'];
 };
 
 
@@ -5774,8 +5804,6 @@ export type PaymentBank = {
   bank_correspondent?: Maybe<Array<Maybe<BankCorrespondent>>>;
   /** Получить страну */
   country?: Maybe<Country>;
-  /** Получить валюты */
-  currencies?: Maybe<Array<Maybe<Currencies>>>;
   /** IDs currencies and regions */
   currencies_and_regions: Array<Maybe<CurrencyAndRegionResponse>>;
   id: Scalars['ID'];
@@ -5791,8 +5819,6 @@ export type PaymentBank = {
   payment_system?: Maybe<PaymentSystem>;
   /** Код платежной системы */
   payment_system_code?: Maybe<Scalars['String']>;
-  /** Получить регионы */
-  regions?: Maybe<Array<Maybe<Region>>>;
   /** SWIFT */
   swift?: Maybe<Scalars['String']>;
 };
@@ -6228,6 +6254,7 @@ export type PivotTable = {
  */
 export type PriceListFee = {
   __typename?: 'PriceListFee';
+  /** Дата создания */
   created_at?: Maybe<Scalars['DateTimeUtc']>;
   fee_ranges?: Maybe<Scalars['JSON']>;
   /** Тип */
@@ -6242,7 +6269,10 @@ export type PriceListFee = {
   /** Период */
   period?: Maybe<FeePeriod>;
   price_list_id?: Maybe<Scalars['ID']>;
+  /** Провайдер квот */
+  quote_provider?: Maybe<QuoteProvider>;
   scheduled?: Maybe<PriceListFeeScheduled>;
+  /** Дата обновления */
   updated_at?: Maybe<Scalars['DateTimeUtc']>;
 };
 
@@ -6261,6 +6291,7 @@ export type PriceListFeeInput = {
   operation_type_id: Scalars['ID'];
   period_id?: InputMaybe<Scalars['ID']>;
   price_list_id: Scalars['ID'];
+  quote_provider_id?: InputMaybe<Scalars['ID']>;
   scheduled?: InputMaybe<PriceListFeeScheduledInput>;
   type_id: Scalars['ID'];
 };
@@ -8149,6 +8180,7 @@ export type QueryPermissionsArgs = {
 export type QueryPriceListFeesArgs = {
   filter?: InputMaybe<QueryPriceListFeesFilterFilterConditions>;
   first?: InputMaybe<Scalars['Int']>;
+  orderBy?: InputMaybe<Array<OrderByClause>>;
   page?: InputMaybe<Scalars['Int']>;
 };
 
@@ -10074,8 +10106,8 @@ export type QueryBankCorrespondentsFilterFilterConditions = {
 
 /** Column names for Query.bankCorrespondents.filter. */
 export enum QueryBankCorrespondentsFilterStatic {
-  HasCurrenciesFilterById = 'HAS_CURRENCIES_FILTER_BY_ID',
-  HasRegionsFilterById = 'HAS_REGIONS_FILTER_BY_ID',
+  HasCurrenciesRegionsFilterByCurrencyId = 'HAS_CURRENCIES_REGIONS_FILTER_BY_CURRENCY_ID',
+  HasCurrenciesRegionsFilterByRegionId = 'HAS_CURRENCIES_REGIONS_FILTER_BY_REGION_ID',
   Id = 'ID',
   Name = 'NAME',
   PaymentSystemId = 'PAYMENT_SYSTEM_ID'
@@ -10083,8 +10115,8 @@ export enum QueryBankCorrespondentsFilterStatic {
 
 /** Input column names for Query.bankCorrespondents.filter. */
 export type QueryBankCorrespondentsFilterStaticInput = {
-  hasCurrenciesFilterById?: InputMaybe<Scalars['ID']>;
-  hasRegionsFilterById?: InputMaybe<Scalars['ID']>;
+  hasCurrenciesRegionsFilterByCurrencyId?: InputMaybe<Scalars['ID']>;
+  hasCurrenciesRegionsFilterByRegionId?: InputMaybe<Scalars['ID']>;
   id?: InputMaybe<Scalars['ID']>;
   name?: InputMaybe<Scalars['String']>;
   payment_system_id?: InputMaybe<Scalars['ID']>;
@@ -10092,8 +10124,8 @@ export type QueryBankCorrespondentsFilterStaticInput = {
 
 /** Column names for Query.bankCorrespondents.filter. */
 export enum QueryBankCorrespondentsFilterStaticOperator {
-  HasCurrenciesFilterById = 'hasCurrenciesFilterById',
-  HasRegionsFilterById = 'hasRegionsFilterById',
+  HasCurrenciesRegionsFilterByCurrencyId = 'hasCurrenciesRegionsFilterByCurrencyId',
+  HasCurrenciesRegionsFilterByRegionId = 'hasCurrenciesRegionsFilterByRegionId',
   Id = 'id',
   Name = 'name',
   PaymentSystemId = 'payment_system_id'
@@ -10101,8 +10133,8 @@ export enum QueryBankCorrespondentsFilterStaticOperator {
 
 /** Column names for Query.bankCorrespondents.filter. */
 export enum QueryBankCorrespondentsFilterStaticType {
-  HasCurrenciesFilterById = 'hasCurrenciesFilterById',
-  HasRegionsFilterById = 'hasRegionsFilterById',
+  HasCurrenciesRegionsFilterByCurrencyId = 'hasCurrenciesRegionsFilterByCurrencyId',
+  HasCurrenciesRegionsFilterByRegionId = 'hasCurrenciesRegionsFilterByRegionId',
   Id = 'id',
   Name = 'name',
   PaymentSystemId = 'payment_system_id'
@@ -12068,8 +12100,8 @@ export type QueryPaymentBanksFilterFilterConditions = {
 export enum QueryPaymentBanksFilterStatic {
   Address = 'ADDRESS',
   BankCode = 'BANK_CODE',
-  HasCurrenciesFilterById = 'HAS_CURRENCIES_FILTER_BY_ID',
-  HasRegionsFilterById = 'HAS_REGIONS_FILTER_BY_ID',
+  HasCurrenciesRegionsFilterByCurrencyId = 'HAS_CURRENCIES_REGIONS_FILTER_BY_CURRENCY_ID',
+  HasCurrenciesRegionsFilterByRegionId = 'HAS_CURRENCIES_REGIONS_FILTER_BY_REGION_ID',
   Id = 'ID',
   Name = 'NAME',
   PaymentProviderId = 'PAYMENT_PROVIDER_ID',
@@ -12081,8 +12113,8 @@ export enum QueryPaymentBanksFilterStatic {
 export type QueryPaymentBanksFilterStaticInput = {
   address?: InputMaybe<Scalars['String']>;
   bank_code?: InputMaybe<Scalars['String']>;
-  hasCurrenciesFilterById?: InputMaybe<Scalars['ID']>;
-  hasRegionsFilterById?: InputMaybe<Scalars['ID']>;
+  hasCurrenciesRegionsFilterByCurrencyId?: InputMaybe<Scalars['ID']>;
+  hasCurrenciesRegionsFilterByRegionId?: InputMaybe<Scalars['ID']>;
   id?: InputMaybe<Scalars['ID']>;
   name?: InputMaybe<Scalars['String']>;
   payment_provider_id?: InputMaybe<Scalars['ID']>;
@@ -12094,8 +12126,8 @@ export type QueryPaymentBanksFilterStaticInput = {
 export enum QueryPaymentBanksFilterStaticOperator {
   Address = 'address',
   BankCode = 'bank_code',
-  HasCurrenciesFilterById = 'hasCurrenciesFilterById',
-  HasRegionsFilterById = 'hasRegionsFilterById',
+  HasCurrenciesRegionsFilterByCurrencyId = 'hasCurrenciesRegionsFilterByCurrencyId',
+  HasCurrenciesRegionsFilterByRegionId = 'hasCurrenciesRegionsFilterByRegionId',
   Id = 'id',
   Name = 'name',
   PaymentProviderId = 'payment_provider_id',
@@ -12107,8 +12139,8 @@ export enum QueryPaymentBanksFilterStaticOperator {
 export enum QueryPaymentBanksFilterStaticType {
   Address = 'address',
   BankCode = 'bank_code',
-  HasCurrenciesFilterById = 'hasCurrenciesFilterById',
-  HasRegionsFilterById = 'hasRegionsFilterById',
+  HasCurrenciesRegionsFilterByCurrencyId = 'hasCurrenciesRegionsFilterByCurrencyId',
+  HasCurrenciesRegionsFilterByRegionId = 'hasCurrenciesRegionsFilterByRegionId',
   Id = 'id',
   Name = 'name',
   PaymentProviderId = 'payment_provider_id',
@@ -13342,6 +13374,8 @@ export type QuoteProvider = {
   /** Дата создания */
   created_at: Scalars['DateTimeUtc'];
   id: Scalars['ID'];
+  /** Комиссия */
+  margin_commission?: Maybe<Scalars['Float']>;
   /** Название */
   name: Scalars['String'];
   /** Тип обновления котировок */
@@ -13355,6 +13389,8 @@ export type QuoteProvider = {
 export type QuoteProviderInput = {
   /** ID компании */
   company_id: Scalars['ID'];
+  /** Комиссия */
+  margin_commission?: InputMaybe<Scalars['Float']>;
   /** Название */
   name: Scalars['String'];
   /** Тип обновления котировок */
@@ -13675,6 +13711,8 @@ export type TransferExchange = {
   transfer_incoming?: Maybe<TransferIncoming>;
   /** Исходящий  перевод */
   transfer_outgoing?: Maybe<TransferOutgoing>;
+  /** Дата и время изменения */
+  updated_at?: Maybe<Scalars['DateTimeUtc']>;
   /** Тип инициатора платежа */
   user_type?: Maybe<UserType>;
 };
@@ -14127,13 +14165,5 @@ export type RelationsQueryVariables = Exact<{ [key: string]: never; }>;
 
 export type RelationsQuery = { __typename?: 'Query', applicantIndividualCompanyPositions?: { __typename?: 'ApplicantIndividualCompanyPositionPaginator', data: Array<{ __typename?: 'ApplicantIndividualCompanyPosition', id: string }> } | null };
 
-export type GetQueryVariables = Exact<{
-  ir?: InputMaybe<Scalars['ID']>;
-}>;
-
-
-export type GetQuery = { __typename?: 'Query', language?: { __typename?: 'Languages', name: string } | null };
-
 
 export const RelationsDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"Relations"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"applicantIndividualCompanyPositions"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"data"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}}]}}]}}]}}]} as unknown as DocumentNode<RelationsQuery, RelationsQueryVariables>;
-export const GetDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"get"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"ir"}},"type":{"kind":"NamedType","name":{"kind":"Name","value":"ID"}},"defaultValue":{"kind":"IntValue","value":"3"}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"language"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"id"},"value":{"kind":"Variable","name":{"kind":"Name","value":"ir"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"name"}}]}}]}}]} as unknown as DocumentNode<GetQuery, GetQueryVariables>;
